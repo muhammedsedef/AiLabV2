@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins">
+    <link rel="stylesheet" href="{% static 'fonts/fontawesome-all.min.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.2.0/aos.css">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+{% endblock %}
+
+
+{% block content %}
+<div class="container register-container">
+      <form method="POST" data-aos="fade-up-right" data-aos-duration="1100" >
+        {% csrf_token %}
+        {% if success %}
+          <div class = "alert alert-primary"> {{success}} </div>
+        {% endif %}
+        {% if error %}
+          <div class = "alert alert-danger"> {{error}} </div>
+        {% endif %}
+          <h2 class="form-title">Edit Profile</h2>
+          <div class="form-group" data-bs-hover-animate="pulse"><i class="fas fa-user"></i><input class="form-control" type="text" name="username" placeholder="{{user.username}} (Username)" required=""></div>
+          <div class="form-group" data-bs-hover-animate="pulse"><i class="fas fa-user"></i><input class="form-control" type="text" name="first_name" placeholder="{{user.first_name}} (First Name)" required=""></div>
+          <div class="form-group" data-bs-hover-animate="pulse"><i class="far fa-user-circle"></i><input class="form-control" type="text" name ="last_name" placeholder="{{user.last_name}} (Last Name)" required=""></div>
+          <div class="form-group" data-bs-hover-animate="pulse"><i class="icon ion-ios-email"></i><input class="form-control" type="email" name ="email" placeholder="{{user.email}}" required=""></div>
+          <div class="form-group" data-bs-hover-animate="pulse"><button class="btn btn-primary btn-color" type="submit">Save Changes</button></div>
+          <div class="form-group" data-bs-hover-animate="pulse"><a class="go-login" href="{% url 'reset_password' %}">Change Password</a></div>
+      </form>
+  </div>
+
+    {% block script %}
+      <script src="{% static 'js/bs-init.js' %}"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.2.0/aos.js"></script>
+    {% endblock %}
+
+{% endblock %}

@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+{% load index %}
+
+{% block content %}
+    <main class="page project-page">
+        <div class="container">
+            <div class="intro">
+                <h1 class="text-center text-uppercase mb-5">{{ algorithm }}: <span
+                        class="text-muted">{{ project.title }}</span>
+                </h1>
+                <div class="float-left ml-1 mb-1">
+                    <span class="text-uppercase text-secondary">Total {{ files|length }} documents</span>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="project-card-no-image">
+                        <h3 class="d-inline-block" style="font-size: 24px;">Selected File</h3>
+                        <div class="d-inline float-right">
+                            <button id="download-files-box" type="button" class="btn btn-primary">
+                                Download Files
+                            </button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th style="width: 15%">File name</th>
+                                    <th style="width: 98%">Preview (first 200 chars)</th>
+                                    <th></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    {% with files|index:selected_document_index as file %}
+                                        <td class="text-center h5 align-middle">{{ file }}</td>
+                                        <td class="align-middle h6">
+                                            {{ file.preview }}
+                                        </td>
+                                    {% endwith %}
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3 style="font-size: 24px;">Document Similarity Table</h3>
+                        <form id="download-form" style="display: contents" method="post"
+                              action="{% url 'download_files' project.id %}">
+                            {% csrf_token %}
+
+                            <div class="table-responsive similarity-table">
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th style="width: 15%">File name</th>
+                                        {% if 'euc' in algorithm|lower or 'man' in algorithm|lower %}
+                                            <th style="width: 1%">
+                                                Distance
+                                            </th>
+                                        {% else %}
+                                            <th style="width: 1%">
+                                                Similarity
+                                            </th>
+                                        {% endif %}
+                                        <th style="width: 98%">Preview (first 200 chars)</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for output in outputs %}
+                                        <tr>
+                                            {% with files|index:output.0 as file %}
+                                                <td class="align-middle h6">
+                                                    <input class="download-input" type="checkbox"
+                                                           name="files_to_download[]"
+                                                           value="{{ file.id }}">
+                                                </td>
+                                                <td class="text-center h5 align-middle">{{ file }}</td>
+                                                <td class="align-middle h2 similarity">{{ output.1|make_list|slice:':6'|join:'' }}</td>
+                                                <td class="align-middle h6">
+                                                    {{ file.preview }}
+                                                </td>
+                                            {% endwith %}
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="sticky-download">
+                <div class="container">
+                    <table style="height: 100px; width: 100%;">
+                        <tbody>
+                        <tr>
+                            <td class="align-middle">
+                                <button onclick="check_uncheck_checkbox()" class="btn btn-primary align-middle">
+                                    Select/Deselect All
+                                </button>
+                            </td>
+                            <td class="align-middle text-black-50">
+                                or
+                            </td>
+                            <td class="align-middle">
+                                <input name="similarity_above" type="number" value="0.5" width="100px">
+                                <button onclick="select_above()" class="btn btn-primary align-middle">
+                                    Select Above
+                                </button>
+                            </td>
+                            <td class="align-middle">
+                                <button onclick="toggleDownload()"
+                                        class="btn btn-secondary align-middle">
+                                    Cancel
+                                </button>
+                                <button disabled id="download-submit" class="btn btn-success align-middle">
+                                    Download Files
+                                </button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+        </section>
+    </main>
+
+
+{% endblock %}
+
+{% block style %}
+    <style>
+        .sticky-download {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            height: 10%;
+            max-height: 100px;
+            width: 100%;
+            background-color: white;
+            border-top: 5px solid gray;
+            color: white;
+            display: none;
+            text-align: center;
+        }
+
+        .download-input {
+            display: none;
+        }
+    </style>
+{% endblock %}
+
+{% block script %}
+
+    <script>
+        $("#download-files-box").click(function () {
+
+            uncheck_all();
+
+            toggleDownload();
+        });
+
+        function toggleDownload() {
+            $("#download-files-box").fadeToggle();
+            $(".sticky-download").slideToggle();
+            $(".download-input").toggle();
+        }
+
+
+        isChecked = false;
+
+        function check_uncheck_checkbox() {
+
+            if (isChecked) {
+                uncheck_all()
+            } else {
+                check_all()
+            }
+            isChecked = !isChecked;
+        }
+
+        function uncheck_all() {
+            $('input[name="files_to_download[]"]').each(function () {
+                this.checked = false;
+            });
+            $(":checkbox").change()
+        }
+
+        function check_all() {
+            $('input[name="files_to_download[]"]').each(function () {
+                this.checked = true;
+            });
+            $(":checkbox").change()
+        }
+
+        $('.similarity-table tr').click(function (event) {
+            if (event.target.type !== 'checkbox') {
+                $(':checkbox', this).trigger('click');
+            }
+        });
+
+        function select_above() {
+            uncheck_all();
+            var similarity_above_value = $('input[name="similarity_above"]').val();
+
+            $('.similarity').each(function (index, elem) {
+                if (parseFloat(elem.innerText) > similarity_above_value) {
+                    $(':checkbox', $(this).closest('tr')).trigger('click');
+                }
+            });
+        }
+
+        $(":checkbox").change(function () {
+            var numberOfChecked = $('input:checkbox:checked').length;
+            if (numberOfChecked > 0) {
+                $("#download-submit").removeAttr('disabled')
+            } else {
+                $("#download-submit").attr('disabled', 'disabled');
+            }
+            $("#download-submit").text(`Download ${numberOfChecked} files`)
+        });
+
+        $("#download-submit").click(function () {
+            $('#download-form').submit()
+        });
+
+
+    </script>
+
+    <script>
+
+        if({% if 'vec-euc' in algorithm|lower or 'man' in algorithm|lower %} true {% else %} false {% endif %}){
+            $(".similarity").each(function (index, elem) {
+            $(this).css('background-color', LightenDarkenColor("#41EB6F", parseFloat(elem.innerText)));
+            console.log(parseFloat(elem.innerText) * 100)
+        });
+        } else{
+            $(".similarity").each(function (index, elem) {
+            $(this).css('background-color', LightenDarkenColor("#41EB6F", (0.6 - parseFloat(elem.innerText)) * 100));
+            console.log(parseFloat(elem.innerText) * 100)
+        });
+        }
+
+
+
+        function LightenDarkenColor(col, amt) {
+
+            var usePound = false;
+
+            if (col[0] == "#") {
+                col = col.slice(1);
+                usePound = true;
+            }
+
+            var num = parseInt(col, 16);
+
+            var r = (num >> 16) + amt;
+
+            if (r > 255) r = 255;
+            else if (r < 0) r = 0;
+
+            var b = ((num >> 8) & 0x00FF) + amt;
+
+            if (b > 255) b = 255;
+            else if (b < 0) b = 0;
+
+            var g = (num & 0x0000FF) + amt;
+
+            if (g > 255) g = 255;
+            else if (g < 0) g = 0;
+
+            return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
+
+        }
+
+    </script>
+
+    <script>
+        window.addEventListener('load', function () {
+
+            $('th').click(function () {
+                var table = $(this).parents('table').eq(0)
+                var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
+                this.asc = !this.asc
+                if (!this.asc) {
+                    rows = rows.reverse()
+                }
+                for (var i = 0; i < rows.length; i++) {
+                    table.append(rows[i])
+                }
+            })
+
+            function comparer(index) {
+                return function (a, b) {
+                    var valA = getCellValue(a, index), valB = getCellValue(b, index)
+                    return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB)
+                }
+            }
+
+            function getCellValue(row, index) {
+                return $(row).children('td').eq(index).text()
+            }
+        })
+    </script>
+{% endblock %}

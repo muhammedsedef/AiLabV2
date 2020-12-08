@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+  <link rel="stylesheet" href="{% static  'css/untitled.css' %}">
+{% endblock %}
+
+{% block style %}
+
+  <style>
+
+    .card {
+      transition: background, color 200ms, 200ms; /* For modern browsers */
+
+    }
+
+    .card:hover {
+      border-width: 2px 2px 2px 10px;
+      border-color: #0ea0ff;
+    {#background: #0ea0ff;#}{#color: white;#} cursor: pointer;
+    }
+
+  </style>
+
+{% endblock %}
+
+{% block content %}
+    {% if user.is_authenticated %}
+      <main class="page cv-page">
+        <section class="portfolio-block cv">
+          <div class="container">
+            <div class="work-experience group">
+              <div class="heading">
+                <h2 class="text-center d-inline">Projects</h2>
+                <div class="col d-inline"><a class="btn btn-outline-primary btn-lg new-project" role="button"
+                                             href="{% url 'create_project' %}"> <i
+                    class="icon ion-android-add icon"></i></a></div>
+              </div>
+    {% endif %}
+          <div>
+            <div class="row">
+             {% if user.is_authenticated %}
+              {% for project in projects %}
+                  {% if project.author.id == user.id %}
+                    <div class="col-md-6 m-auto" style="padding: 0;">
+                      <div class="contact-info portfolio-info-card card">
+                        <a href="{% url 'show_project' project.id %}" class="stretched-link"></a>
+                        <div class="row">
+                          <div class="col-auto">
+                            <h2>{{ project.title }}</h2>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-1"><i class="icon ion-android-calendar icon"></i></div>
+                          <div class="col-9"><span>{{ project.date }}</span></div>
+                        </div>
+                        <div class="row">
+                          <div class="col-1"><i class="icon ion-android-document icon"></i></div>
+                          <div class="col-9"><span>{{ project.get_files|length }} Files
+                            </span></div>
+                        </div>
+                      </div>
+                    </div>
+                  {% endif %}
+              {% endfor %}
+                {% ifequal projects.count 0 %}
+                 <div>
+                     <div class="row text-center">
+                         <div class="col">
+                             <h3>You have no projects. Press + button to create project.</h3>
+                         </div>
+                     </div>
+                 </div>
+                {% endifequal %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+
+{% else %}
+    <div class = "container" style= "margin-top : 100px;" >
+    <h3>You cannot create a project without logged in! </h3> <br />
+    <a class="btn btn-primary" href="{% url 'login' %}" role="button">Login</a>
+    </div>
+<br />
+{% endif %}
+{% endblock %}

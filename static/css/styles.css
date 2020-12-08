@@ -1,0 +1,75 @@
+body {
+  background-color: #f8f8f8;
+}
+
+.register-container {
+  background: #ffffff;
+  margin: 0 auto;
+  border-radius: 20px;
+  max-width: 900px;
+  font-family: Poppins, sans-serif;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+form {
+  padding: 75px 0;
+  width: 50%;
+  margin: 200px auto;
+  text-align: center;
+}
+
+.form-title {
+  margin-bottom: 40px;
+  font-size: 36px;
+  font-weight: bold;
+  color: rgb(14,160,255);
+}
+
+.form-control {
+  width: 60%;
+  display: inline-block;
+  outline: none;
+  padding: 6px 30px;
+  height: calc(1.5em + .75rem + 2px);
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #495057;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: none;
+  border-bottom: 1px solid #999;
+  border-radius: 0;
+}
+
+.form-group {
+  margin-bottom: 25px;
+}
+
+.form-control:focus {
+  color: #495057;
+  background-color: #fff;
+  outline: none;
+  box-shadow: none;
+  border-color: #80bdff;
+  border-bottom-style: solid;
+  border-bottom-color: rgb(10,1,1);
+}
+
+i {
+  font-size: 14px !important;
+  font-family: "Font Awesome 5 Free" !important;
+  font-weight: 900 !important;
+  color: #0ea0ff;
+}
+
+.btn-color {
+  background: linear-gradient(120deg, #7f70f5 0%, #0ea0ff 100%);
+}
+
+.go-login {
+  color: black;
+  font-size: 16px;
+  text-decoration: underline;
+}

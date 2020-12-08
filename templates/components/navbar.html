@@ -1,0 +1,24 @@
+<nav class="navbar navbar-dark navbar-expand-lg fixed-top bg-white portfolio-navbar gradient">
+  <div class="container"><a class="navbar-brand logo" href="{% url 'home' %}">Bilgi AILab</a>
+    <button data-toggle="collapse" class="navbar-toggler" data-target="#navbarNav"><span class="sr-only">Toggle navigation</span><span
+        class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse"
+         id="navbarNav">
+      <ul class="nav navbar-nav ml-auto">
+
+        <li class="nav-item" role="presentation"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
+        <li class="nav-item" role="presentation"><a class="nav-link" href="{% url 'documentation' %}">Documentation</a></li>
+        {% if user.is_authenticated %}
+          <li class="nav-item" role="presentation"><a class="nav-link" href="{% url 'all_projects' %}">Projects</a></li>
+          <li class="nav-item" role="presentation"><a class="nav-link" href="{% url 'edit_profile' %}">Edit Profile</a></li>
+          <li class="nav-item" role="presentation"><a class="nav-link" href="{% url 'logout' %}">Logout</a></li>
+        {% else %}
+          <li class="nav-item" role="presentation"><a class="nav-link" href="{% url 'register' %}">Register</a></li>
+          <li class="nav-item" role="presentation"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
+        {% endif %}
+
+
+      </ul>
+    </div>
+  </div>
+</nav>

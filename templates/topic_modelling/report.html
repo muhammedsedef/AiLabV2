@@ -1,0 +1,747 @@
+{% extends 'base.html' %}
+{% load index %}
+{% load static %}
+{% block head %}
+    <script type="text/javascript" src="{% static 'js/bokeh-2.0.2.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    <main class="page project-page">
+        <div class="container">
+            <div class="intro">
+                <h1 class="text-center text-uppercase mb-5">{{ algorithm }}: <span
+                        class="text-muted">{{ project.title }}</span>
+                </h1>
+                <div class="float-left ml-1 mb-1">
+                    <span class="text-uppercase text-secondary">Total {{ filecount }} documents</span>
+                </div>
+                <div class="float-right mr-1 mb-1">
+                        <span class="text-uppercase text-primary">
+                            {% if coherence_value %}
+                                Coherence Value: {{ coherence_value|make_list|slice:':6'|join:'' }}
+                            {% endif %}
+                            {% if silhouette_score %}
+                                Silhouette Score: {{ silhouette_score|make_list|slice:':6'|join:'' }}
+                            {% endif %}
+                        </span>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+
+            <form method="post" action="{% url 'set_topics' report.project.id report.algorithm report.id %}">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-12">
+                        <div class="project-card-no-image">
+                            <h3 style="font-size: 24px;">Topic Word Distrubution</h3>
+
+                            <button type="button" class="btn btn-sm btn-info m-2" data-toggle="collapse"
+                                    data-target="#filter">
+                                <i class="icon ion-ios-settings-strong m-1"
+                                   style="font-size: 20px;vertical-align: middle;"></i>
+                                <span class="align-middle">Filter</span>
+                            </button>
+                            <button type="submit" style="display: none" class="btn btn-success topic-input">Apply
+                            </button>
+                            <button data-target="#xxx" type="button" class="btn btn-primary" id="set-topic-names"
+                            >Edit Topic Names
+                            </button>
+
+
+                            <div id="filter" class="collapse mb-2">
+                                <form class="form-inline m-1 p-3 my-form"
+                                      style="box-shadow: none;max-width: none">
+
+                                    <div class="form-group">
+                                        <fieldset>
+                                            <label class="">Keywords</label>
+
+                                            <div class="range-slider">
+                                                <input class="range-slider__range" type="range" value="10" min="1"
+                                                       max="{{ word_distributions.0|length }}" id="myRange">
+                                                <span class="range-slider__value">0</span>
+                                            </div>
+                                        </fieldset>
+
+                                    </div>
+
+
+                                </form>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th style="width: 15%">Topic Name</th>
+                                        <th style="width: 98%">Words</th>
+                                        <th style="width: 1%">Count of Documents</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for word_distribution in word_distributions %}
+                                        <tr>
+
+                                            <td class="text-center h5 align-middle">
+                                                <span class="topic-text">{{ topics|index:forloop.counter0 }}</span>
+                                                <input name="topics[]" style="display: none" class="w-100 topic-input"
+                                                       type="text"
+                                                       value="{{ topics|index:forloop.counter0 }}"/>
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {% for word in word_distribution %}
+                                                    <div class="d-inline"><span
+                                                            class="badge p-1 mt-1 badge-dark tag-row-{{ forloop.parentloop.counter0 }}"
+                                                            data-toggle="tooltip" data-placement="top"
+                                                            title="{{ word.1 }}"
+                                                            style="font-size: 16px;">{{ word.0 }}</span>
+                                                    </div>
+                                                {% endfor %}
+                                            </td>
+                                            {#                                            {% for key, value in doc_dist.items %}#}
+                                            {#                                                {{ forloop.parentloop.counter0 }} {{ forloop.counter0 }}#}
+                                            {#                                                <br>#}
+                                            {#                                                {% if forloop.parentloop.counter == forloop.counter %}#}
+                                            {% with doc_dist|index_dict:forloop.counter0|length as file_count %}
+                                                <td class="text-center align-middle h2 btn-outline-primary {% ifnotequal file_count 0 %}clickable{% endifnotequal %}"
+                                                    data-toggle="modal"
+                                                        {% ifnotequal file_count 0 %}
+                                                    data-target="#fileListModal{{ forloop.counter }}"
+                                                        {% endifnotequal %}>
+
+                                                    {{ file_count }}
+                                                </td>
+                                            {% endwith %}
+
+                                            <!-- Modal -->
+                                            <div class="modal fade"
+                                                 id="fileListModal{{ forloop.counter }}"
+                                                 tabindex="-1"
+                                                 role="dialog"
+                                                 aria-labelledby="fileListModalLabel"
+                                                 aria-hidden="true">
+                                                <div class="modal-dialog modal-xl modal-dialog-scrollable"
+                                                     role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="fileListModalLabel">
+                                                                File List of {{ topics|index:forloop.counter0 }}
+                                                            </h5>
+                                                            <button type="button" class="close"
+                                                                    data-dismiss="modal"
+                                                                    aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <form style="display: contents" method="post"
+                                                              action="{% url 'download_files' project.id %}">
+                                                            {% csrf_token %}
+                                                            <div class="modal-body">
+
+                                                                <div class="row">
+                                                                    <div class="col-md-3 my-content">
+                                                                        <div class="file-list">
+                                                                            <ul>
+                                                                                {% for x in doc_dist|index_dict:forloop.counter0 %}
+                                                                                    {% with project.get_files|index:x as file %}
+                                                                                        <li onclick="previewFile(this)"
+                                                                                            data-file-url="{% url 'full_view_to_file' file.id %}">
+                                                                                            {{ file.filename.title }}
+                                                                                            <input hidden
+                                                                                                   name="files_to_download[]"
+                                                                                                   value="{{ file.id }}">
+                                                                                        </li>
+
+
+                                                                                    {% endwith %}
+                                                                                {% endfor %}
+                                                                            </ul>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-9 my-content">
+                                                                        <h2 class="file-preview-title">Select File</h2>
+                                                                        <hr>
+                                                                        <pre class="file-preview">
+                                                                        </pre>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="modal-footer">
+                                                                <button type="submit"
+                                                                        class="btn float-left btn-success">
+                                                                    Download Files
+                                                                </button>
+                                                                <button type="button" class="btn btn-secondary"
+                                                                        data-dismiss="modal">Close
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {#                                                {% endif %}#}
+                                            {#                                            {% endfor %}#}
+
+                                        </tr>
+
+
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="project-card-no-image">
+                        <h3 style="font-size: 24px;">Document Topic Distrubution</h3>
+                        <select id='documents-select'>
+                            {% for file in files %}
+                                <option value="{{ forloop.counter0 }}">{{ file }}</option>
+                            {% endfor %}
+
+                        </select>
+                        <button class="btn btn-primary" id="documents-add-button">Add</button>
+                        <button class="btn btn-danger" id="documents-show-all-button">Show All</button>
+                        <br>
+                        <br>
+                        <div class="row">
+                            {% for topic_distribution in topic_distributions %}
+                                <div class="col-md-4" data-file="{{ forloop.counter0 }}" style="display: none">
+                                    <section class="project-card-no-image">
+
+
+                                        <h3 class="text-truncate"
+                                            style="font-size: 24px;"> {{ files|index:forloop.counter0 }}
+                                            <span style="cursor: pointer" class="float-right remove-button text-danger"><i
+                                                    data-toggle="tooltip"
+                                                    class="icon ion-eye-disabled"
+                                                    title="Hide"></i></span>
+                                        </h3>
+                                        {% for topic in topic_distribution %}
+
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <h6>{{ topics|index:topic.0 }}:</h6>
+                                                </div>
+                                                <div class="col-md-8">
+                                                    <h6 class="doc-topic-percentage">{{ topic.1 }}</h6>
+                                                </div>
+                                            </div>
+
+                                        {% endfor %}
+
+
+                                    </section>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="project-card-no-image">
+                        <h3 style="font-size: 24px;">TSNE GRAPHs</h3>
+
+                        <!-- Nav tabs -->
+                        <ul class="nav nav-tabs">
+                            <li class="nav-item">
+                                <button class="a nav-link active" data-toggle="tab" href="#graph2d">2D</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="a nav-link" data-toggle="tab" href="#graph3d">3D</button>
+                            </li>
+                        </ul>
+
+                        <!-- Tab panes -->
+                        <div class="tab-content">
+                            {% with topics|length as topic_count %}
+                                <div class="tab-pane container active" id="graph2d">
+                                    <br>
+                                    <button
+                                            {% if topic_count < 2 %}disabled{% endif %}
+                                            data-graph-url="{% url 'get_graph' project.id algorithm report.id 'graph_2d' %}"
+                                            class="btn btn-outline-primary btn-block graph">
+                                        {% if topic_count < 2 %}
+                                            2D Graph needs at least 2 topics. You have {{ topic_count }} topic.
+                                        {% else %}
+                                            LOAD GRAPH
+                                        {% endif %}
+                                    </button>
+                                </div>
+
+                                <div class="tab-pane container fade" id="graph3d">
+                                    <br>
+                                    <button
+                                            {% if topic_count < 3 %}disabled{% endif %}
+                                            data-graph-url="{% url 'get_graph' project.id algorithm report.id 'graph_3d' %}"
+                                            class="btn btn-outline-primary btn-block graph">
+                                        {% if topic_count < 3 %}
+                                            3D Graph needs at least 3 topics. You have {{ topic_count }} topic(s).
+                                        {% else %}
+                                            LOAD GRAPH
+                                        {% endif %}
+                                    </button>
+                                </div>
+                            {% endwith %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            {#            {{ files }}#}
+            {#            <br>#}
+            {#            <br>#}
+            {#            {{ word_distributions|length }}#}
+            {#            {{ word_distributions }}#}
+            {#            <br>#}
+            {#            <br>#}
+            {#            {{ topic_distributions }}#}
+            {#            <br>#}
+            {#            <br>#}
+            {#            {{ doc_dist }}#}
+        </div>
+        </section>
+    </main>
+{% endblock %}
+
+{% block script %}
+    <script>
+        function previewFile(e) {
+            var element = $(e);
+            var fileUrl = element.data('file-url');
+            console.log(fileUrl)
+            var previewBox = element.closest(".row").find(".file-preview")
+            var fileTitleH2 = element.closest(".row").find(".file-preview-title")
+            fileTitleH2.text(element.text())
+            $.get(fileUrl).done(function (data) {
+                previewBox.html(data);
+            });
+
+        }
+    </script>
+    <script>
+        //LOAD GRAPH
+        $('.graph').click(function () {
+            $(this).attr('disabled', 'disabled');
+            $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>\n' +
+                '  <span class="sr-only">Loading...</span>')
+
+
+            var graphUrl = $(this).data('graph-url');
+            var parentDiv = $(this).closest("div");
+            $.get(graphUrl).done(function (graph) {
+                parentDiv.html(graph);
+            });
+
+        });
+
+    </script>
+
+    <script>
+        //REMOVE BUTTON
+        $('.remove-button').click(function () {
+            $(this).closest($("div")).hide();
+        });
+        //END REMOVE BUTTON
+
+        //REMOVE BUTTON
+        $('#set-topic-names').click(function () {
+            var text = $(this).text()
+            $(this).text(text.includes("Edit") ? "Cancel" : "Edit Topic Names")
+            $('.topic-input').toggle();
+            $('.topic-text').toggle();
+
+        });
+        //END REMOVE BUTTON
+
+        // DOCUMENT SELECTION
+
+        var mySelect = $('#documents-select');
+
+        $('#documents-add-button').click(function () {
+            var val = $("#documents-select option:selected").val();
+            var element = $('*[data-file=' + val + ']');
+
+            element.show()
+
+        });
+
+        $('#documents-show-all-button').click(function () {
+            var elements = $('[data-file]');
+
+            elements.each(function (index, element) {
+                $(this).show()
+            });
+
+
+        });
+
+        //END DOCUMENT SELECTION
+
+        var colorArray = [
+            "#63b598", "#ce7d78", "#ea9e70", "#0d5ac1",
+            "#14a9ad", "#4ca2f9",
+            "#d298e2", "#6119d0", "#d2737d", "#c0a43c", "#f2510e",
+            "#651be6", "#79806e", "#cd2f00", "#9348af",
+            "#c5a4fb", "#996635", "#b11573", "#4bb473", "#75d89e",
+            "#2f3f94", "#2f7b99", "#da967d", "#34891f", "#ca4751",
+            "#4b5bdc", "#250662", "#cb5bea", "#228916",
+            "#ac3e1b", "#df514a", "#539397", "#880977", "#f697c1",
+            "#f158bf", "#e145ba", "#ee91e3", "#4834d0",
+            "#802234", "#6749e8", "#8fb413", "#b2b4f0",
+            "#c3c89d", "#c9a941", "#41d158", "#fb21a3", "#51aed9",
+            "#5bb32d", "#0807fb", "#21538e", "#89d534", "#d36647",
+            "#7fb411", "#0023b8", "#3b8c2a", "#986b53", "#f50422",
+            "#983f7a", "#ea24a3", "#79352c", "#521250", "#c79ed2",
+            "#63b598", "#ce7d78", "#ea9e70", "#0d5ac1",
+            "#14a9ad", "#4ca2f9",
+            "#d298e2", "#6119d0", "#d2737d", "#c0a43c", "#f2510e",
+            "#651be6", "#79806e", "#cd2f00", "#9348af",
+            "#c5a4fb", "#996635", "#b11573", "#4bb473", "#75d89e",
+            "#2f3f94", "#2f7b99", "#da967d", "#34891f", "#ca4751",
+            "#4b5bdc", "#250662", "#cb5bea", "#228916",
+            "#ac3e1b", "#df514a", "#539397", "#880977", "#f697c1",
+            "#f158bf", "#e145ba", "#ee91e3", "#4834d0",
+            "#802234", "#6749e8", "#8fb413", "#b2b4f0",
+            "#c3c89d", "#c9a941", "#41d158", "#fb21a3", "#51aed9",
+            "#5bb32d", "#0807fb", "#21538e", "#89d534", "#d36647",
+            "#7fb411", "#0023b8", "#3b8c2a", "#986b53", "#f50422",
+            "#983f7a", "#ea24a3", "#79352c", "#521250", "#c79ed2",
+            "#63b598", "#ce7d78", "#ea9e70", "#0d5ac1",
+            "#14a9ad", "#4ca2f9",
+            "#d298e2", "#6119d0", "#d2737d", "#c0a43c", "#f2510e",
+            "#651be6", "#79806e", "#cd2f00", "#9348af",
+            "#c5a4fb", "#996635", "#b11573", "#4bb473", "#75d89e",
+            "#2f3f94", "#2f7b99", "#da967d", "#34891f", "#ca4751",
+            "#4b5bdc", "#250662", "#cb5bea", "#228916",
+            "#ac3e1b", "#df514a", "#539397", "#880977", "#f697c1",
+            "#f158bf", "#e145ba", "#ee91e3", "#4834d0",
+            "#802234", "#6749e8", "#8fb413", "#b2b4f0",
+            "#c3c89d", "#c9a941", "#41d158", "#fb21a3", "#51aed9",
+            "#5bb32d", "#0807fb", "#21538e", "#89d534", "#d36647",
+            "#7fb411", "#0023b8", "#3b8c2a", "#986b53", "#f50422",
+            "#983f7a", "#ea24a3", "#79352c", "#521250", "#c79ed2",
+        ];
+
+        {#colorArray = [#}
+        {##}
+        {##}
+        {#    "#d6dd92", "#e33e52", "#b2be57", "#fa06ec",#}
+        {#    "#1bb699", "#6b2e5f", "#64820f", "#1c271", "#21538e", "#89d534", "#d36647",#}
+        {#    "#7fb411", "#0023b8", "#3b8c2a", "#986b53", "#f50422", "#983f7a", "#ea24a3",#}
+        {#    "#79352c", "#521250", "#c79ed2", "#d6dd92", "#e33e52", "#b2be57", "#fa06ec",#}
+        {#    "#1bb699", "#6b2e5f", "#64820f", "#1c271", "#9cb64a", "#996c48", "#9ab9b7",#}
+        {#    "#06e052", "#e3a481", "#0eb621", "#fc458e", "#b2db15", "#aa226d", "#792ed8",#}
+        {#    "#73872a", "#520d3a", "#cefcb8", "#a5b3d9", "#7d1d85", "#c4fd57", "#f1ae16",#}
+        {#    "#8fe22a", "#ef6e3c", "#243eeb", "#1dc18", "#dd93fd", "#3f8473", "#e7dbce",#}
+        {#    "#421f79", "#7a3d93", "#635f6d", "#93f2d7", "#9b5c2a", "#15b9ee", "#0f5997",#}
+        {#    "#409188", "#911e20", "#1350ce", "#10e5b1", "#fff4d7", "#cb2582", "#ce00be",#}
+        {#    "#32d5d6", "#17232", "#608572", "#c79bc2", "#00f87c", "#77772a", "#6995ba",#}
+        {#    "#fc6b57", "#f07815", "#8fd883", "#060e27", "#96e591", "#21d52e", "#d00043",#}
+        {#    "#b47162", "#1ec227", "#4f0f6f", "#1d1d58", "#947002", "#bde052", "#e08c56",#}
+        {#    "#28fcfd", "#bb09b", "#36486a", "#d02e29", "#1ae6db", "#3e464c", "#a84a8f",#}
+        {#    "#911e7e", "#3f16d9", "#0f525f", "#ac7c0a", "#b4c086", "#c9d730", "#30cc49",#}
+        {#    "#3d6751", "#fb4c03", "#640fc1", "#62c03e", "#d3493a", "#88aa0b", "#406df9",#}
+        {#    "#615af0", "#4be47", "#2a3434", "#4a543f", "#79bca0", "#a8b8d4", "#00efd4",#}
+        {#    "#7ad236", "#7260d8", "#1deaa7", "#06f43a", "#823c59", "#e3d94c", "#dc1c06",#}
+        {#    "#f53b2a", "#b46238", "#2dfff6", "#a82b89", "#1a8011", "#436a9f", "#1a806a",#}
+        {#    "#4cf09d", "#c188a2", "#67eb4b", "#b308d3", "#fc7e41", "#af3101", "#ff065",#}
+        {#    "#71b1f4", "#a2f8a5", "#e23dd0", "#d3486d", "#00f7f9", "#474893", "#3cec35",#}
+        {#    "#1c65cb", "#5d1d0c", "#2d7d2a", "#ff3420", "#5cdd87", "#a259a4", "#e4ac44",#}
+        {#    "#1bede6", "#8798a4", "#d7790f", "#b2c24f", "#de73c2", "#d70a9c", "#25b67",#}
+        {#    "#88e9b8", "#c2b0e2", "#86e98f", "#ae90e2", "#1a806b", "#436a9e", "#0ec0ff",#}
+        {#    "#f812b3", "#b17fc9", "#8d6c2f", "#d3277a", "#2ca1ae", "#9685eb", "#8a96c6",#}
+        {#    "#dba2e6", "#76fc1b", "#608fa4", "#20f6ba", "#07d7f6", "#dce77a", "#77ecca"]#}
+
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        });
+
+        $('table > tbody  > tr > td:nth-child(2)').each(function (index, xd) {
+            var color = colorArray.shift()
+            var count = {{ word_distributions.0|length }}
+                $(`.tag-row-${index}`).each(function (index2, tag) {
+                    $(tag).css('background-color', LightenDarkenColor(color, (index2 + 1) * 70 / count));
+                })
+
+        });
+
+
+        function LightenDarkenColor(col, amt) {
+
+            var usePound = false;
+
+            if (col[0] == "#") {
+                col = col.slice(1);
+                usePound = true;
+            }
+
+            var num = parseInt(col, 16);
+
+            var r = (num >> 16) + amt;
+
+            if (r > 255) r = 255;
+            else if (r < 0) r = 0;
+
+            var b = ((num >> 8) & 0x00FF) + amt;
+
+            if (b > 255) b = 255;
+            else if (b < 0) b = 0;
+
+            var g = (num & 0x0000FF) + amt;
+
+            if (g > 255) g = 255;
+            else if (g < 0) g = 0;
+
+            return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
+
+        }
+
+        $('#myRange').on("change mousemove", function () {
+            var x = parseInt($(this).val())
+            $('#myRangeValue').html(x)
+
+        });
+
+        var x = parseInt($('#myRange').val())
+        $('#myRangeValue').html(x)
+        $('table > tbody  > tr > td:nth-child(2)').each(function (index, xd) {
+            $(`.tag-row-${index}:lt(10)`).show()
+            $(`.tag-row-${index}:gt(9)`).hide()
+
+        });
+
+        var rangeSlider = function () {
+            var slider = $('.range-slider'),
+                range = $('.range-slider__range'),
+                value = $('.range-slider__value');
+
+            slider.each(function () {
+
+                value.each(function () {
+                    var value = $(this).prev().attr('value');
+                    $(this).html(value);
+                });
+
+                range.on('input', function () {
+                    $(this).next(value).html(this.value);
+                    var xxx = this.value
+                    $('table > tbody  > tr > td:nth-child(2)').each(function (index, xd) {
+                        $(`.tag-row-${index}:lt(${xxx})`).show()
+                        $(`.tag-row-${index}:gt(${xxx - 1})`).hide()
+
+                    });
+                });
+            });
+        };
+
+        rangeSlider();
+
+        //SORTING
+
+        $('th').click(function () {
+            var table = $(this).parents('table').eq(0)
+            var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
+            this.asc = !this.asc
+            if (!this.asc) {
+                rows = rows.reverse()
+            }
+            for (var i = 0; i < rows.length; i++) {
+                table.append(rows[i])
+            }
+        })
+
+        function comparer(index) {
+            return function (a, b) {
+                var valA = getCellValue(a, index), valB = getCellValue(b, index)
+                return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB)
+            }
+        }
+
+        function getCellValue(row, index) {
+            return $(row).children('td').eq(index).text()
+        }
+
+        //END SORTING
+
+
+        //PARSING FLOAT
+        $('.doc-topic-percentage').each(function (index, item) {
+            item.innerText = parseFloat(item.innerText)
+        })
+        //PARSE END
+    </script>
+{% endblock %}
+
+{% block style %}
+    <style>
+
+        .clickable {
+            cursor: pointer;
+        }
+
+        .my-form {
+            border-radius: 5px;
+            border-color: #d4d4d4;
+            border-width: 2px;
+            border-style: solid;
+            padding: 10px;
+        }
+
+
+        *, *:before, *:after {
+            box-sizing: border-box;
+        }
+
+
+        .range-slider {
+            width: 100%;
+        }
+
+        .range-slider__range {
+            -webkit-appearance: none;
+            width: calc(100% - (73px));
+            height: 10px;
+            border-radius: 5px;
+            background: #d7dcdf;
+            outline: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .range-slider__range::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #2c3e50;
+            cursor: pointer;
+            transition: background 0.15s ease-in-out;
+        }
+
+        .range-slider__range::-webkit-slider-thumb:hover {
+            background: #1abc9c;
+        }
+
+        .range-slider__range:active::-webkit-slider-thumb {
+            background: #1abc9c;
+        }
+
+        .range-slider__range::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border: 0;
+            border-radius: 50%;
+            background: #2c3e50;
+            cursor: pointer;
+            transition: background 0.15s ease-in-out;
+        }
+
+        .range-slider__range::-moz-range-thumb:hover {
+            background: #1abc9c;
+        }
+
+        .range-slider__range:active::-moz-range-thumb {
+            background: #1abc9c;
+        }
+
+        .range-slider__range:focus::-webkit-slider-thumb {
+            box-shadow: 0 0 0 3px #fff, 0 0 0 6px #1abc9c;
+        }
+
+        .range-slider__value {
+            display: inline-block;
+            position: relative;
+            width: 60px;
+            color: #fff;
+            line-height: 20px;
+            text-align: center;
+            border-radius: 3px;
+            background: #2c3e50;
+            padding: 5px 10px;
+            margin-left: 8px;
+        }
+
+        .range-slider__value:after {
+            position: absolute;
+            top: 8px;
+            left: -7px;
+            width: 0;
+            height: 0;
+            border-top: 7px solid transparent;
+            border-right: 7px solid #2c3e50;
+            border-bottom: 7px solid transparent;
+            content: '';
+        }
+
+        ::-moz-range-track {
+            background: #d7dcdf;
+            border: 0;
+        }
+
+        input::-moz-focus-inner, input::-moz-focus-outer {
+            border: 0;
+        }
+
+        .form-inline label {
+            justify-content: normal;
+        }
+
+        .scrollable {
+            overflow-y: scroll;
+            position: absolute;
+        }
+
+        .my-content {
+            height: 75vh;
+            overflow: auto;
+        }
+
+        .file-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .file-list li {
+            padding: 0 10px;
+            cursor: pointer;
+        }
+
+        .file-list li:hover {
+            padding: 0 10px;
+            background: dimgray !important;
+        }
+
+        .file-list li:nth-child(odd) {
+            background: lightgray;
+        }
+
+        .file-list li:nth-child(even) {
+            background: white;
+        }
+
+        .file-preview {
+            height: 75%;
+            padding: 0 10px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .a {
+            color: #0ea0ff;
+            text-decoration: none;
+            background-color: transparent;
+        }
+
+    </style>
+{% endblock %}

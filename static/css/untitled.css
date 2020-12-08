@@ -1,0 +1,20 @@
+#file-list {
+    padding: 100px;
+}
+
+.preview-files {
+    margin-left: 10px;
+}
+
+.preview-files i {
+    margin-left: 5px;
+}
+
+.portfolio-info-card.contact-info {
+    border-width: 2px;
+    margin: 10px;
+}
+
+.btn.btn-outline-primary.btn-lg.new-project {
+    margin-bottom: 10px;
+}

@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block style %}
+
+    <style>
+
+        .card {
+            transition: background, color 200ms, 200ms; /* For modern browsers */
+            background: white;
+            color: #0ea0ff;
+
+        }
+
+        .card:hover {
+            border-width: 1px 1px 1px 10px;
+            background: #0ea0ff;
+            color: white !important;
+            cursor: pointer;
+        }
+
+    </style>
+{% endblock %}
+
+{% block content %}
+    <main class="page project-page">
+        <section class="portfolio-block project">
+            <div class="container">
+
+                <div class="project-card-no-image">
+                    <h3 style="font-size: 24px;">Select Algorithm To Apply</h3>
+
+                    <div class="row">
+                        <div class="col-md-6 my-1">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h3>
+                                        Frequency
+                                    </h3>
+                                    <a class="stretched-link"
+                                       href="{% url 'apply_stats_algorithm' project.id 'frequency' %}"></a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 my-1">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h3>
+                                        N-gram
+                                    </h3>
+                                    <a class="stretched-link"
+                                       href="{% url 'apply_stats_algorithm' project.id 'N-gram' %}"></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 my-1">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h3>
+                                        Wordcloud
+                                    </h3>
+                                    <a class="stretched-link"
+                                       href="{% url 'apply_stats_algorithm' project.id 'Wordcloud' %}"></a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 my-1">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h3>
+                                        Zipf Law
+                                    </h3>
+                                    <a class="stretched-link"
+                                       href="{% url 'apply_stats_algorithm' project.id 'Zipf Law' %}"></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="project-card-no-image">
+                    <h3 style="font-size: 24px;">History of All Algorithms</h3>
+                    {% include 'document_stats/components/history-table.html' %}
+                </div>
+
+            </div>
+        </section>
+    </main>
+{% endblock %}

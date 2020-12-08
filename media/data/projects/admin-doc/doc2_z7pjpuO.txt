@@ -1,0 +1,1 @@
+Convolutional Neural Networks take advantage of the fact that the input consists of images and they constrain the architecture in a more sensible way.

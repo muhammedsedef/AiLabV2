@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block head %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
+{% endblock %}
+
+
+
+
+{% block content %}
+    <main class="page project-page">
+        <section class="portfolio-block project">
+            <div class="container">
+
+                    <div class="project-card-no-image">
+                        <h3 style="font-size: 24px;">Apply <span class="text-uppercase">{{ algorithm }}</span></h3>
+
+
+                        <form method="post">
+                            {% csrf_token %}
+
+                            <div class="form-group">
+                                <fieldset>
+                                    <label class="">Number of words in a construction (min:2)</label>
+                                    <input type="number" value="2"
+                                           class="form-control" name="n_word"/>
+
+                                </fieldset>
+                            </div>
+  
+                            <div class="form-group">
+                                <fieldset>
+                                    <label class="">Number of results (min:1) </label>
+                                    <input type="number" value="1"
+                                           class="form-control" name="n_most"/>
+
+                                </fieldset>
+                            </div>
+
+
+                            <div class="row mt-2">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <fieldset>
+
+                                            <select name = "file" class="selectpicker form-control" multiple data-actions-box="true" multiple data-selected-text-format="count"  data-size="5" title="Select Texts">
+                                                {% for file in files %}
+                                                    <option value = "{{ file.id }}">{{ file }}</option>
+                                                {% endfor %}
+
+
+                                            </select>
+
+                                        </fieldset>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr>
+                            <div class="form-group">
+                                <fieldset>
+                                    <p>To all courpus or 1 by 1?</p>
+
+                                    <div style = "margin-bottom : 10px;" class="form-check">
+                                        <input type="radio" class="form-check-input" name="selected_corpus" id="all_corpus" value="all_corpus">
+                                        <label class="form-check-label" for="all_corpus">All Corpus</label>
+                                    </div>
+
+                                    <div class="form-check">
+                                        <input type="radio" class="form-check-input" name="selected_corpus" id="1by1" value="1by1">
+                                        <label class="form-check-label" for="1by1" name="1_by_1">1 By 1</label>
+                                    </div>
+
+                                </fieldset>
+                            </div>
+
+                            <hr>
+<!--                             <div class="form-group">-->
+<!--                                 <label class="">Select Texts:</label>-->
+<!--                                <fieldset>-->
+<!--                                    <div class="form-check">-->
+<!--                                        <label class="form-check-label">-->
+<!--                                            <input type="checkbox" class="form-check-input" >Select all texts-->
+<!--                                        </label>-->
+<!--                                    </div>-->
+
+<!--                                </fieldset>-->
+<!--                            </div>-->
+
+
+
+                            <div class="form-group">
+                                <button class="btn btn-primary" type="submit" >Run</button>
+                            </div>
+                        </form>
+
+                    </div>
+
+
+                <div class="project-card-no-image">
+                    <h3 style="font-size: 24px;">History of <span class="text-uppercase">{{ algorithm }}</span>
+                        Algorithm</h3>
+                    {% include 'document_stats/components/history-table.html' %}
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+
+
+{% block script %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
+
+
+{% endblock %}
+
+
+
+
+{% endblock %}
