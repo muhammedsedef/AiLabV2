@@ -1,4 +1,5 @@
 # How to install
+# I tried something to see is this working well thank you
 
 1. [Download](https://github.com/ibrahim-dogan/cmpe-graduation-project/archive/master.zip) or clone repository with command-line:
 ```
