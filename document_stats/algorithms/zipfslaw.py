@@ -2,30 +2,37 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from document_stats.algorithms import preprocessingHelper
 from operator import itemgetter
-from importlib import reload
-reload(preprocessingHelper)
+#from importlib import reload
 
-"""
+#reload(preprocessingHelper)
+
+
 doc_1 = 'Convolutional Neural Networks are very similar to ordinary Neural Networks from the previous chapter'
 doc_2 = 'Convolutional Neural Networks take advantage of the fact that the input consists of images and they constrain the architecture in a more sensible way.'
 doc_3 = 'In particular, unlike a regular Neural Network, the layers of a ConvNet have neurons arranged in 3 dimensions: width, height, depth.'
-doc_4 = "acaba altı altmış ama ancak benim adım saltuk ben bilgi ünide okuyorum "
+doc_4 = "acaba altı altmış ama ancak benim adım saltuk ben bilgi ünide okuyorum elli elli elli elli elli elli elli elli elli elli elli elli elli elli elli elli elli elli elli elli elli"
 
-arr = [doc_1, doc_2, doc_3]
-
-"""
+arr = [doc_1, doc_2, doc_3, doc_4]
 
 
 
-def zipf(arr):
+def zipfAll(arr, useStopwords):
     str = ""
     for i in arr:
         str += i
         str += " "
 
+
+
     frequency = {}
-    str = preprocessingHelper.preprocessing(str)
+    if useStopwords == True:
+        str = preprocessingHelper.preprocessing(str)
+    else:
+        str = preprocessingHelper.preprocessing(str, False)
+
+
     for word in str:
+
         count = frequency.get(word, 0)
         frequency[word] = count + 1
 
@@ -44,27 +51,17 @@ def zipf(arr):
     plt.xticks(rotation=40)  # to rotate x-axis values
 
     for word, freq in collection[:30]:
-        plt.bar(word, freq)
-        #plt.scatter(df["Rank"], df["Frequency"])
+        #plt.bar(word, freq)
+        plt.scatter(word, freq)
 
     return df, plt.show()
 
-"""
-dfd, pltt = zipf(arr)
 
 
-print(dfd)
+#dfd, pltt = zipfAll(arr, True)
 
-print(pltt)
 
-df, plt = zipf(arr)
-
-print(df)
-
-print(plt)
-
-"""
-
+#print(dfd)
 
 
 """

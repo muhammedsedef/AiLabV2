@@ -7,7 +7,7 @@ from django.urls import reverse
 from document_stats.algorithms.bigrams import bigramsAll,bigrams
 from document_stats.algorithms.frequency import frequency,frequencySep
 from document_stats.algorithms.wordCloudGenerator import wordCloudAll,wordCloud
-from document_stats.algorithms.zipfslaw import zipf
+from document_stats.algorithms.zipfslaw import zipfAll
 from document_stats.models import Report
 from project.models import Project,ProjectFile
 
@@ -112,7 +112,7 @@ def apply_stats_algorithm(request, pk, algorithm):
                 outputs = wordCloud(corpus)
 
         elif algorithm.lower() == "zipf law":
-                outputs = zipf(corpus)
+                outputs = zipfAll(corpus)
 
                 # outputs = yeni zipf algosu gelecek(corpus)
 

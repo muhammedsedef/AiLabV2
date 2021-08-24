@@ -53,47 +53,56 @@ def tokenizer(text):
 
 
 # preprocessing for texts
-def preprocessing(cleaned):
+def preprocessing(cleaned, useStopwords=True):
     cleaned = remove_whitespace(cleaned)
     cleaned = remove_numbers(cleaned)
     cleaned = remove_punctuations(cleaned)
     valid_characters = 'abcçdefgğhıijklmnoöpqrsştuüvwxyzQWERTYUIOPĞÜASDFGHJKLŞİZXCVBNMÖÇ1234567890 '
     cleaned = ''.join([x for x in cleaned if x in valid_characters]) # yukarıdaki valid charlar içinde olmayan karakterleri silme.
     cleaned = text_lowercase(cleaned)
-    cleaned = stopwords(cleaned)
+    if useStopwords == True:
+        cleaned = stopwords(cleaned)
+
     cleaned = tokenizer(cleaned)
     return cleaned
 
 
 # preprocessing for texts
-def preprocessing_(doc): # harf, sayı, noktalama dışındaki karakterleri de tutuyor.
+def preprocessing_(doc, useStopwords = True): # harf, sayı, noktalama dışındaki karakterleri de tutuyor.
     cleaned = doc
     cleaned = remove_whitespace(cleaned)
     cleaned = remove_numbers(cleaned)
     cleaned = remove_punctuations(cleaned)
     cleaned = text_lowercase(cleaned)
-    cleaned = stopwords(cleaned)
+    if useStopwords == True:
+        cleaned = stopwords(cleaned)
+
     return cleaned
 
 
 # preprocessing for all documents
-def alldocclean(alldocuments):
+def alldocclean(alldocuments, useStopwords = True):
     predocs = []
     for i in alldocuments:
-        predoc = preprocessing(i)
+        if useStopwords == True:
+            predoc = preprocessing(i)
+        else:
+            predoc = preprocessing(i, False)
         predocs.append(predoc)
     return predocs  # predocs contains all cleared texts
 
 
 # preprocessing for all documents
-def alldocclean_(alldocuments):
+def alldocclean_(alldocuments, useStopwords = True):
     predocs = []
     for i in alldocuments:
-        predoc = preprocessing_(i)
+        if useStopwords == True:
+            predoc = preprocessing_(i)
+        else:
+            predoc = preprocessing_(i, False)
+
         predocs.append(predoc)
     return predocs  # predocs contains all cleared texts
-
-
 # totalwords() -> get the cleaned document list
 # return -> words in all documents
 def totalwords(allpredocs):
